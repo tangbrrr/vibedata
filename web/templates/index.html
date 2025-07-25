@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merkle Tree 可视化工具</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-sitemap"></i> Merkle Tree 可视化工具</h1>
+                <p>交互式探索 Merkle Tree 的结构、证明生成和验证过程</p>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 控制面板 -->
+            <section class="control-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-cogs"></i> 控制面板</h2>
+                </div>
+                
+                <div class="control-sections">
+                    <!-- 数据管理 -->
+                    <div class="control-section">
+                        <h3><i class="fas fa-database"></i> 数据管理</h3>
+                        <div class="input-group">
+                            <input type="text" id="newDataInput" placeholder="输入新数据..." class="data-input">
+                            <button id="addDataBtn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> 添加数据
+                            </button>
+                        </div>
+                        
+                        <div class="data-list-container">
+                            <h4>当前数据列表:</h4>
+                            <div id="dataList" class="data-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- 证明操作 -->
+                    <div class="control-section">
+                        <h3><i class="fas fa-certificate"></i> Merkle Proof</h3>
+                        <div class="proof-controls">
+                            <div class="input-group">
+                                <input type="text" id="proofDataInput" placeholder="输入要证明的数据..." class="data-input">
+                                <button id="generateProofBtn" class="btn btn-secondary">
+                                    <i class="fas fa-key"></i> 生成证明
+                                </button>
+                            </div>
+                            
+                            <div class="input-group">
+                                <input type="text" id="verifyDataInput" placeholder="输入要验证的数据..." class="data-input">
+                                <button id="verifyDataBtn" class="btn btn-info">
+                                    <i class="fas fa-check-circle"></i> 验证数据
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 树操作 -->
+                    <div class="control-section">
+                        <h3><i class="fas fa-refresh"></i> 树操作</h3>
+                        <div class="tree-controls">
+                            <button id="refreshTreeBtn" class="btn btn-success">
+                                <i class="fas fa-sync-alt"></i> 刷新树
+                            </button>
+                            <button id="clearTreeBtn" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 清空重建
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 可视化区域 -->
+            <section class="visualization-area">
+                <div class="panel-header">
+                    <h2><i class="fas fa-eye"></i> 树结构可视化</h2>
+                    <div class="tree-info">
+                        <span class="info-item">
+                            <i class="fas fa-layer-group"></i>
+                            深度: <span id="treeDepth">-</span>
+                        </span>
+                        <span class="info-item">
+                            <i class="fas fa-leaf"></i>
+                            叶子节点: <span id="leafCount">-</span>
+                        </span>
+                        <span class="info-item">
+                            <i class="fas fa-fingerprint"></i>
+                            根哈希: <span id="rootHash">-</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="tree-container">
+                    <div id="treeVisualization" class="tree-visualization">
+                        <!-- 树结构将在这里动态生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 证明展示区域 -->
+            <section class="proof-area" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-shield-alt"></i> Merkle Proof 详情</h2>
+                    <button id="closeProofBtn" class="btn btn-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="proof-content">
+                    <div class="proof-info">
+                        <div class="proof-summary">
+                            <div class="summary-item">
+                                <label>叶子索引:</label>
+                                <span id="proofLeafIndex">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <label>叶子哈希:</label>
+                                <span id="proofLeafHash" class="hash-value">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <label>根哈希:</label>
+                                <span id="proofRootHash" class="hash-value">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <label>证明大小:</label>
+                                <span id="proofSize">-</span> 字节
+                            </div>
+                            <div class="summary-item">
+                                <label>证明状态:</label>
+                                <span id="proofStatus" class="status-badge">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="proof-path">
+                        <h4>证明路径:</h4>
+                        <div id="proofPathSteps" class="proof-steps">
+                            <!-- 证明步骤将在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 日志区域 -->
+            <section class="log-area">
+                <div class="panel-header">
+                    <h2><i class="fas fa-terminal"></i> 操作日志</h2>
+                    <button id="clearLogBtn" class="btn btn-outline">
+                        <i class="fas fa-broom"></i> 清空
+                    </button>
+                </div>
+                <div id="logContainer" class="log-container">
+                    <!-- 日志消息将在这里显示 -->
+                </div>
+            </section>
+        </main>
+
+        <!-- 加载指示器 -->
+        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>处理中...</span>
+            </div>
+        </div>
+
+        <!-- 通知容器 -->
+        <div id="notificationContainer" class="notification-container"></div>
+    </div>
+
+    <!-- 脚本文件 -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/visualization.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html> 

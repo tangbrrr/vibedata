@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merkle Tree 可视化工具 - 纯前端版</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #7c3aed;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --info-color: #0891b2;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --border-radius: 8px;
+            --transition: all 0.2s ease-in-out;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 头部样式 */
+        .header {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 30px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header h1 i {
+            margin-right: 15px;
+            color: var(--secondary-color);
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            font-weight: 400;
+        }
+
+        /* 主内容布局 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 30px;
+            grid-template-areas: 
+                "control visualization"
+                "control proof"
+                "log log";
+        }
+
+        /* 面板通用样式 */
+        .control-panel,
+        .visualization-area,
+        .proof-area,
+        .log-area {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h2 {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .panel-header i {
+            margin-right: 10px;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            grid-area: control;
+        }
+
+        .control-sections {
+            padding: 25px;
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .control-section h3 {
+            color: var(--text-primary);
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .control-section h3 i {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+
+        /* 输入组 */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .data-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .data-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn i {
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #6d28d9;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #0e7490;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--light-color);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-close {
+            background: transparent;
+            color: white;
+            padding: 8px 12px;
+        }
+
+        .btn-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 数据列表 */
+        .data-list-container {
+            margin-top: 20px;
+        }
+
+        .data-list-container h4 {
+            color: var(--text-primary);
+            font-size: 0.95em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .data-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .data-item {
+            background: var(--light-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .data-item:hover {
+            background: #f3f4f6;
+            border-color: var(--primary-color);
+        }
+
+        .data-text {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .data-index {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        /* 可视化区域 */
+        .visualization-area {
+            grid-area: visualization;
+            min-height: 500px;
+        }
+
+        .tree-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .info-item {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .info-item i {
+            font-size: 16px;
+            margin-right: 5px;
+        }
+
+        .tree-container {
+            padding: 30px;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tree-visualization {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: auto;
+        }
+
+        /* 树节点样式 */
+        .tree-level {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .tree-node {
+            background: white;
+            border: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            box-shadow: var(--shadow-md);
+        }
+
+        .tree-node:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-lg);
+            z-index: 10;
+        }
+
+        .tree-node.leaf {
+            border-color: var(--success-color);
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        }
+
+        .tree-node.internal {
+            border-color: var(--info-color);
+            background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+        }
+
+        .tree-node.root {
+            border-color: var(--danger-color);
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+            border-width: 4px;
+        }
+
+        .tree-node.highlighted {
+            border-color: var(--warning-color);
+            background: linear-gradient(135deg, #fffbeb, #fed7aa);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .node-hash {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .node-data {
+            font-size: 8px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 2px;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 证明区域 */
+        .proof-area {
+            grid-area: proof;
+            min-height: 400px;
+        }
+
+        .proof-content {
+            padding: 25px;
+        }
+
+        .proof-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .summary-item label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .summary-item span {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .hash-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            background: var(--light-color);
+            padding: 8px;
+            border-radius: 4px;
+            word-break: break-all;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.valid {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-badge.invalid {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .proof-path h4 {
+            color: var(--text-primary);
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .proof-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .proof-step {
+            background: var(--light-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .step-position {
+            background: var(--secondary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .step-hash {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: var(--text-primary);
+            background: white;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            flex: 1;
+            word-break: break-all;
+        }
+
+        /* 日志区域 */
+        .log-area {
+            grid-area: log;
+        }
+
+        .log-container {
+            height: 200px;
+            overflow-y: auto;
+            padding: 0;
+            background: #1f2937;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .log-entry {
+            padding: 8px 20px;
+            border-bottom: 1px solid #374151;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-entry.info {
+            color: #60a5fa;
+        }
+
+        .log-entry.success {
+            color: #34d399;
+        }
+
+        .log-entry.error {
+            color: #f87171;
+        }
+
+        .log-entry.warning {
+            color: #fbbf24;
+        }
+
+        .log-timestamp {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .log-message {
+            flex: 1;
+        }
+
+        /* 加载和通知 */
+        .loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .loading-spinner i {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notification {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            padding: 15px 20px;
+            border-left: 4px solid;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-left-color: var(--success-color);
+        }
+
+        .notification.error {
+            border-left-color: var(--danger-color);
+        }
+
+        .notification.info {
+            border-left-color: var(--info-color);
+        }
+
+        .notification.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "control"
+                    "visualization"
+                    "proof"
+                    "log";
+            }
+            
+            .tree-info {
+                justify-content: center;
+            }
+            
+            .proof-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .control-sections {
+                padding: 15px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .tree-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .tree-node {
+                width: 60px;
+                height: 60px;
+                margin: 0 8px;
+            }
+            
+            .node-hash {
+                font-size: 8px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-sitemap"></i> Merkle Tree 可视化工具</h1>
+                <p>纯前端版本 - 交互式探索 Merkle Tree 的结构、证明生成和验证过程</p>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 控制面板 -->
+            <section class="control-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-cogs"></i> 控制面板</h2>
+                </div>
+                
+                <div class="control-sections">
+                    <!-- 数据管理 -->
+                    <div class="control-section">
+                        <h3><i class="fas fa-database"></i> 数据管理</h3>
+                        <div class="input-group">
+                            <input type="text" id="newDataInput" placeholder="输入新数据..." class="data-input">
+                            <button id="addDataBtn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> 添加数据
+                            </button>
+                        </div>
+                        
+                        <div class="data-list-container">
+                            <h4>当前数据列表:</h4>
+                            <div id="dataList" class="data-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- 证明操作 -->
+                    <div class="control-section">
+                        <h3><i class="fas fa-certificate"></i> Merkle Proof</h3>
+                        <div class="proof-controls">
+                            <div class="input-group">
+                                <input type="text" id="proofDataInput" placeholder="输入要证明的数据..." class="data-input">
+                                <button id="generateProofBtn" class="btn btn-secondary">
+                                    <i class="fas fa-key"></i> 生成证明
+                                </button>
+                            </div>
+                            
+                            <div class="input-group">
+                                <input type="text" id="verifyDataInput" placeholder="输入要验证的数据..." class="data-input">
+                                <button id="verifyDataBtn" class="btn btn-info">
+                                    <i class="fas fa-check-circle"></i> 验证数据
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 树操作 -->
+                    <div class="control-section">
+                        <h3><i class="fas fa-refresh"></i> 树操作</h3>
+                        <div class="tree-controls">
+                            <button id="refreshTreeBtn" class="btn btn-success">
+                                <i class="fas fa-sync-alt"></i> 刷新树
+                            </button>
+                            <button id="clearTreeBtn" class="btn btn-danger">
+                                <i class="fas fa-undo"></i> 重置数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 可视化区域 -->
+            <section class="visualization-area">
+                <div class="panel-header">
+                    <h2><i class="fas fa-eye"></i> 树结构可视化</h2>
+                    <div class="tree-info">
+                        <span class="info-item">
+                            <i class="fas fa-layer-group"></i>
+                            深度: <span id="treeDepth">-</span>
+                        </span>
+                        <span class="info-item">
+                            <i class="fas fa-leaf"></i>
+                            叶子节点: <span id="leafCount">-</span>
+                        </span>
+                        <span class="info-item">
+                            <i class="fas fa-fingerprint"></i>
+                            根哈希: <span id="rootHash">-</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="tree-container">
+                    <div id="treeVisualization" class="tree-visualization">
+                        <!-- 树结构将在这里动态生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 证明展示区域 -->
+            <section class="proof-area" style="display: none;">
+                <div class="panel-header">
+                    <h2><i class="fas fa-shield-alt"></i> Merkle Proof 详情</h2>
+                    <button id="closeProofBtn" class="btn btn-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="proof-content">
+                    <div class="proof-info">
+                        <div class="proof-summary">
+                            <div class="summary-item">
+                                <label>叶子索引:</label>
+                                <span id="proofLeafIndex">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <label>叶子哈希:</label>
+                                <span id="proofLeafHash" class="hash-value">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <label>根哈希:</label>
+                                <span id="proofRootHash" class="hash-value">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <label>证明大小:</label>
+                                <span id="proofSize">-</span> 字节
+                            </div>
+                            <div class="summary-item">
+                                <label>证明状态:</label>
+                                <span id="proofStatus" class="status-badge">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="proof-path">
+                        <h4>证明路径:</h4>
+                        <div id="proofPathSteps" class="proof-steps">
+                            <!-- 证明步骤将在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 日志区域 -->
+            <section class="log-area">
+                <div class="panel-header">
+                    <h2><i class="fas fa-terminal"></i> 操作日志</h2>
+                    <button id="clearLogBtn" class="btn btn-outline">
+                        <i class="fas fa-broom"></i> 清空
+                    </button>
+                </div>
+                <div id="logContainer" class="log-container">
+                    <!-- 日志消息将在这里显示 -->
+                </div>
+            </section>
+        </main>
+
+        <!-- 加载指示器 -->
+        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>处理中...</span>
+            </div>
+        </div>
+
+        <!-- 通知容器 -->
+        <div id="notificationContainer" class="notification-container"></div>
+    </div>
+
+
+
+    <!-- JavaScript 代码 -->
+    <script src="static/js/merkle-tree.js"></script>
+    <script src="static/js/api.js"></script>
+    <script src="static/js/visualization.js"></script>
+    <script src="static/js/app.js"></script>
+</body>
+</html> 
