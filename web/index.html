@@ -749,6 +749,14 @@
             background: var(--text-secondary);
         }
 
+        /* Dify 聊天机器人样式自定义 */
+        #dify-chatbot-bubble-button {
+            background-color: #1C64F2 !important;
+        }
+        #dify-chatbot-bubble-window {
+            width: 24rem !important;
+            height: 40rem !important;
+        }
 
     </style>
 </head>
@@ -926,5 +934,25 @@
     <script src="static/js/api.js"></script>
     <script src="static/js/visualization.js"></script>
     <script src="static/js/app.js"></script>
+
+    <!-- Dify 聊天机器人 -->
+    <script>
+        window.difyChatbotConfig = {
+            token: 'F9xQHD9fhS7cO66n',
+            systemVariables: {
+                // user_id: 'YOU CAN DEFINE USER ID HERE',
+                // conversation_id: 'YOU CAN DEFINE CONVERSATION ID HERE, IT MUST BE A VALID UUID',
+            },
+            userVariables: {
+                // avatar_url: 'YOU CAN DEFINE USER AVATAR URL HERE',
+                // name: 'YOU CAN DEFINE USER NAME HERE',
+            },
+        }
+    </script>
+    <script
+        src="https://udify.app/embed.min.js"
+        id="F9xQHD9fhS7cO66n"
+        defer>
+    </script>
 </body>
 </html> 
